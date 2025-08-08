@@ -30,11 +30,14 @@ try {
 
 // ✅ Paste PART 2 next
 const PLAYERS = ["tulip", "rose"];
-type Player = typeof PLAYERS[number];
+/**
+ * @typedef {"tulip" | "rose"} Player
+ */
 
-const START_INDEX: Record<Player, number> = {
+/** @type {Record<Player, number>} */
+const START_INDEX = {
   tulip: 0,
-  rose: 26,
+  rose: 13,
 };
 const HOME_ENTRY_INDEX: Record<Player, number> = {
   tulip: 50,
