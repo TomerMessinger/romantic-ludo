@@ -1,8 +1,9 @@
-// Romantic Ludo (1v1) – JavaScript-only refined version
-import React, { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
+// 🎮 Romantic Ludo – Beautifully Redesigned for Tomer & Ivana 💘
+
+import React, { useEffect, useState } from "react";
 import { initializeApp } from "firebase/app";
-import { getDatabase, ref, set, onValue, serverTimestamp } from "firebase/database";
+import { getDatabase, ref, onValue, set } from "firebase/database";
+import { motion } from "framer-motion";
 import "./style.css";
 
 const firebaseConfig = {
@@ -15,42 +16,29 @@ const firebaseConfig = {
   appId: "1:831562295731:web:90c0e24911173f358003c6",
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+initializeApp(firebaseConfig);
+const db = getDatabase();
 
-const PLAYERS = ["tulip", "rose"];
-const START_INDEX = { tulip: 0, rose: 13 };
-const HOME_ENTRY_INDEX = { tulip: 50, rose: 24 };
-const COLORS = { tulip: "#FFC0CB", rose: "#FF5E78" };
 const EMOJIS = { tulip: "🌷", rose: "🌹" };
-const HEART = "❤️";
+const COLORS = { tulip: "#ffc6d0", rose: "#ff6f91" };
 
-function generateBoard() {
-  return Array(52).fill(null);
-}
+const TILE_COUNT = 28;
 
 export default function App() {
   const [player, setPlayer] = useState(null);
-  const [dice, setDice] = useState(1);
   const [positions, setPositions] = useState({ tulip: 0, rose: 0 });
   const [turn, setTurn] = useState("tulip");
-
-  const isMyTurn = player === turn;
+  const [dice, setDice] = useState(1);
 
   useEffect(() => {
     const posRef = ref(db, "positions");
     const turnRef = ref(db, "turn");
 
-    onValue(posRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) setPositions(data);
-    });
-
-    onValue(turnRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) setTurn(data);
-    });
+    onValue(posRef, (snap) => snap.exists() && setPositions(snap.val()));
+    onValue(turnRef, (snap) => snap.exists() && setTurn(snap.val()));
   }, []);
+
+  const isMyTurn = player === turn;
 
   function rollDice() {
     if (!isMyTurn) return;
@@ -60,64 +48,61 @@ export default function App() {
 
   function move() {
     if (!isMyTurn) return;
-    const newPos = (positions[player] + dice) % 52;
+    const newPos = (positions[player] + dice) % TILE_COUNT;
     const updated = { ...positions, [player]: newPos };
     set(ref(db, "positions"), updated);
     set(ref(db, "turn"), player === "tulip" ? "rose" : "tulip");
   }
 
-  const board = useMemo(() => generateBoard(), []);
-
   return (
-    <div className="game">
-      <h1>Romantic Ludo 🌷🌹</h1>
-      <h2>Since 23.03.2025 💘</h2>
+    <div className="container">
+      <header>
+        <h1>🌹 Tomer & Ivana's Ludo 🌷</h1>
+        <p className="subtitle">Together since 23.03.2025 💘</p>
+      </header>
 
-      {!player && (
-        <div className="choose-player">
+      {!player ? (
+        <div className="player-select">
           <button onClick={() => setPlayer("tulip")}>Play as 🌷 Tulip</button>
           <button onClick={() => setPlayer("rose")}>Play as 🌹 Rose</button>
         </div>
-      )}
-
-      {player && (
+      ) : (
         <>
           <div className="board">
-            {board.map((_, i) => (
-              <div key={i} className="tile">
-                {Object.entries(positions).map(([p, pos]) =>
-                  pos === i ? (
-                    <motion.div
-                      key={p}
-                      className="piece"
-                      style={{ backgroundColor: COLORS[p] }}
-                    >
-                      {EMOJIS[p]}
-                    </motion.div>
-                  ) : null
+            {Array.from({ length: TILE_COUNT }).map((_, idx) => (
+              <div className="tile" key={idx}>
+                {positions.tulip === idx && (
+                  <motion.div layout className="piece" style={{ backgroundColor: COLORS.tulip }}>
+                    {EMOJIS.tulip}
+                  </motion.div>
+                )}
+                {positions.rose === idx && (
+                  <motion.div layout className="piece" style={{ backgroundColor: COLORS.rose }}>
+                    {EMOJIS.rose}
+                  </motion.div>
                 )}
               </div>
             ))}
           </div>
 
-          <div className="dice-area">
+          <div className="controls">
             <div className="dice" onClick={rollDice}>
               {Array.from({ length: dice }).map((_, i) => (
-                <span key={i}>{HEART}</span>
+                <span key={i}>❤️</span>
               ))}
             </div>
-            {isMyTurn && (
-              <button className="move-btn" onClick={move}>
-                Move {EMOJIS[player]}
-              </button>
-            )}
-            {!isMyTurn && <p>Waiting for your lover's turn... 💕</p>}
+            <button className="move-btn" onClick={move} disabled={!isMyTurn}>
+              Move {EMOJIS[player]}
+            </button>
+            <p className="turn-msg">
+              {isMyTurn ? "Your turn 💞" : "Waiting for your love..."}
+            </p>
           </div>
         </>
       )}
 
       <footer>
-        💖 Made for 23.03.2025 — Tulip & Rose forever.
+        <p>Made with love for Ivana ❤️ by Tomer</p>
       </footer>
     </div>
   );
