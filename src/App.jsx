@@ -29,7 +29,7 @@ try {
 }
 
 // ✅ Paste PART 2 next
-const PLAYERS = ["tulip", "rose"] as const;
+const PLAYERS = ["tulip", "rose"];
 type Player = typeof PLAYERS[number];
 
 const START_INDEX: Record<Player, number> = {
